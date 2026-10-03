@@ -1,0 +1,613 @@
+:root {
+  color-scheme: dark;
+
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  background: #0b1220;
+  color: white;
+}
+
+
+/* ==========================================
+   RESET
+========================================== */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+.game-shell {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  background: #0b1220;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+
+/* ==========================================
+   GAME
+========================================== */
+
+.game-shell {
+  position: relative;
+  isolation: isolate;
+}
+
+
+/* ==========================================
+   STREET VIEW
+========================================== */
+
+.street-view {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  /*
+    INTENTIONALLY KEPT.
+    Do not remove — Street View inversion stays enabled.
+  */
+  filter:
+    invert(100%)
+    hue-rotate(10deg);
+}
+
+
+/* ==========================================
+   TOP BAR
+========================================== */
+
+.top-bar {
+  position: absolute;
+
+  top: 16px;
+  left: 50%;
+
+  z-index: 20;
+
+  width:
+    min(
+      760px,
+      calc(100% - 32px)
+    );
+
+  transform:
+    translateX(-50%);
+
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  padding:
+    10px 14px;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.12);
+
+  border-radius: 14px;
+
+  background:
+    rgba(15, 23, 42, 0.84);
+
+  box-shadow:
+    0 12px 32px
+    rgba(0, 0, 0, 0.24);
+
+  backdrop-filter:
+    blur(12px);
+}
+
+.brand {
+  font-weight: 800;
+
+  letter-spacing:
+    -0.02em;
+
+  white-space: nowrap;
+}
+
+.hud {
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  color: #e2e8f0;
+
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.hud-divider {
+  width: 1px;
+  height: 18px;
+
+  background:
+    rgba(255, 255, 255, 0.18);
+}
+
+
+/* ==========================================
+   MESSAGE
+========================================== */
+
+.message {
+  position: absolute;
+
+  top: 78px;
+  left: 50%;
+
+  z-index: 20;
+
+  max-width:
+    min(
+      620px,
+      calc(100% - 32px)
+    );
+
+  transform:
+    translateX(-50%);
+
+  padding:
+    8px 12px;
+
+  border-radius:
+    999px;
+
+  background:
+    rgba(15, 23, 42, 0.78);
+
+  color:
+    #e2e8f0;
+
+  font-size:
+    0.9rem;
+
+  text-align:
+    center;
+
+  backdrop-filter:
+    blur(10px);
+
+  pointer-events:
+    none;
+}
+
+
+/* ==========================================
+   GUESS PANEL
+========================================== */
+
+.guess-panel {
+  position: absolute;
+
+  right: 18px;
+  bottom: 18px;
+
+  z-index: 30;
+
+  width:
+    min(
+      390px,
+      calc(100vw - 36px)
+    );
+
+  padding: 8px;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.14);
+
+  border-radius: 16px;
+
+  background:
+    rgba(15, 23, 42, 0.92);
+
+  box-shadow:
+    0 18px 45px
+    rgba(0, 0, 0, 0.35);
+
+  transition:
+    width 180ms ease,
+    transform 180ms ease;
+}
+
+.guess-panel:hover,
+.guess-panel:focus-within {
+  width:
+    min(
+      620px,
+      calc(100vw - 36px)
+    );
+}
+
+.guess-map {
+  width: 100%;
+  height: 260px;
+
+  border-radius: 11px;
+
+  overflow: hidden;
+}
+
+
+/* ==========================================
+   BUTTONS
+========================================== */
+
+.primary-button {
+  width: 100%;
+
+  margin-top: 8px;
+
+  padding:
+    12px 16px;
+
+  border: 0;
+  border-radius: 11px;
+
+  background:
+    #7c3aed;
+
+  color:
+    white;
+
+  font-weight: 800;
+
+  letter-spacing:
+    0.01em;
+
+  cursor: pointer;
+
+  transition:
+    transform 120ms ease,
+    filter 120ms ease,
+    opacity 120ms ease;
+}
+
+.primary-button:hover:not(:disabled) {
+  filter:
+    brightness(1.08);
+
+  transform:
+    translateY(-1px);
+}
+
+.primary-button:active:not(:disabled) {
+  transform:
+    translateY(0);
+}
+
+.primary-button:disabled {
+  opacity: 0.45;
+
+  cursor:
+    not-allowed;
+}
+
+
+/* ==========================================
+   ROUND RESULT
+
+   The full-screen result layer does NOT
+   block Street View.
+
+   Only the result card receives clicks.
+========================================== */
+
+.result-overlay {
+  position: absolute;
+  inset: 0;
+
+  z-index: 60;
+
+  pointer-events: none;
+}
+
+.result-card {
+  position: absolute;
+
+  left: 18px;
+  bottom: 18px;
+
+  width:
+    min(
+      540px,
+      calc(100vw - 36px)
+    );
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.14);
+
+  border-radius:
+    16px;
+
+  overflow:
+    hidden;
+
+  background:
+    rgba(15, 23, 42, 0.94);
+
+  box-shadow:
+    0 18px 50px
+    rgba(0, 0, 0, 0.42);
+
+  backdrop-filter:
+    blur(12px);
+
+  pointer-events: auto;
+}
+
+.result-map {
+  width: 100%;
+  height: 230px;
+}
+
+.result-summary {
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, 1fr);
+
+  gap: 12px;
+
+  padding: 14px;
+}
+
+.result-stat {
+  min-width: 0;
+}
+
+.result-label {
+  display: block;
+
+  margin-bottom: 4px;
+
+  color:
+    #94a3b8;
+
+  font-size:
+    0.72rem;
+
+  font-weight:
+    700;
+
+  text-transform:
+    uppercase;
+
+  letter-spacing:
+    0.06em;
+}
+
+.result-stat strong {
+  font-size:
+    0.95rem;
+}
+
+.result-next {
+  grid-column:
+    1 / -1;
+
+  width: 100%;
+
+  margin:
+    2px 0 0;
+}
+
+
+/* ==========================================
+   FINAL SCORE
+========================================== */
+
+.final-overlay {
+  position: absolute;
+  inset: 0;
+
+  z-index: 80;
+
+  display: grid;
+
+  place-items: center;
+
+  padding: 24px;
+
+  background:
+    rgba(2, 6, 23, 0.72);
+
+  backdrop-filter:
+    blur(8px);
+}
+
+.final-card {
+  width:
+    min(
+      480px,
+      92vw
+    );
+
+  padding: 34px;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.14);
+
+  border-radius:
+    20px;
+
+  background:
+    #0f172a;
+
+  box-shadow:
+    0 28px 80px
+    rgba(0, 0, 0, 0.5);
+
+  text-align:
+    center;
+}
+
+.final-kicker {
+  margin:
+    0 0 6px;
+
+  color:
+    #94a3b8;
+
+  font-size:
+    0.82rem;
+
+  font-weight:
+    800;
+
+  text-transform:
+    uppercase;
+
+  letter-spacing:
+    0.08em;
+}
+
+.final-card h1 {
+  margin: 0;
+}
+
+.final-score {
+  margin:
+    18px 0 24px;
+
+  font-size:
+    clamp(
+      2rem,
+      8vw,
+      3.6rem
+    );
+
+  font-weight:
+    900;
+
+  letter-spacing:
+    -0.04em;
+}
+
+
+/* ==========================================
+   HIDDEN
+========================================== */
+
+.is-hidden {
+  display:
+    none !important;
+}
+
+
+/* ==========================================
+   MOBILE
+========================================== */
+
+@media (max-width: 760px) {
+  .top-bar {
+    top: 10px;
+
+    width:
+      calc(100% - 20px);
+
+    padding:
+      9px 11px;
+  }
+
+  .brand {
+    font-size:
+      0.9rem;
+  }
+
+  .hud {
+    gap: 7px;
+
+    font-size:
+      0.82rem;
+  }
+
+  .message {
+    top: 68px;
+
+    max-width:
+      calc(100% - 20px);
+
+    font-size:
+      0.8rem;
+  }
+
+  .guess-panel,
+  .guess-panel:hover,
+  .guess-panel:focus-within {
+    right: 10px;
+    bottom: 10px;
+
+    width:
+      calc(100vw - 20px);
+  }
+
+  .guess-map {
+    height:
+      min(
+        38vh,
+        330px
+      );
+  }
+
+  .result-card {
+    left: 10px;
+    bottom: 10px;
+
+    width:
+      calc(100vw - 20px);
+  }
+
+  .result-map {
+    height: 190px;
+  }
+
+  .result-summary {
+    grid-template-columns:
+      1fr 1fr;
+  }
+
+  .result-stat:last-of-type {
+    grid-column:
+      1 / -1;
+  }
+
+  .result-next {
+    grid-column:
+      1 / -1;
+  }
+
+  .final-overlay {
+    padding: 12px;
+  }
+}
