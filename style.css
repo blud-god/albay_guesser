@@ -611,3 +611,90 @@ select {
     padding: 12px;
   }
 }
+
+/* ==========================================
+   COMPASS
+========================================== */
+
+.compass {
+  position: absolute;
+
+  left: 18px;
+  top: 18px;
+
+  z-index: 35;
+
+  width: 58px;
+  height: 58px;
+
+  display: grid;
+  place-items: center;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.18);
+
+  border-radius: 50%;
+
+  background:
+    rgba(15, 23, 42, 0.88);
+
+  box-shadow:
+    0 10px 28px
+    rgba(0, 0, 0, 0.30);
+
+  backdrop-filter:
+    blur(10px);
+
+  pointer-events: none;
+}
+
+.compass::before {
+  content: "";
+
+  position: absolute;
+
+  width: 6px;
+  height: 6px;
+
+  border-radius: 50%;
+
+  background: white;
+
+  opacity: 0.8;
+}
+
+.compass-needle {
+  position: absolute;
+
+  top: 5px;
+
+  width: 100%;
+
+  text-align: center;
+
+  font-size: 13px;
+
+  font-weight: 900;
+
+  transform-origin:
+    50% 24px;
+
+  transition:
+    transform 80ms linear;
+}
+
+@media (max-width: 760px) {
+  .compass {
+    left: 10px;
+    top: 74px;
+
+    width: 52px;
+    height: 52px;
+  }
+
+  .compass-needle {
+    transform-origin:
+      50% 21px;
+  }
+}

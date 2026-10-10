@@ -651,50 +651,86 @@ class AlbayGeoGuessr {
   ===================================================== */
 
   loadPanorama(position) {
-    const heading = Math.random() * 360;
+  const heading = Math.random() * 360;
 
-    if (!this.panorama) {
-      this.panorama = new google.maps.StreetViewPanorama(
-        document.getElementById("street-view"),
-        {
-          position,
+  if (!this.panorama) {
+    this.panorama = new google.maps.StreetViewPanorama(
+      document.getElementById("street-view"),
+      {
+        position,
 
-          pov: {
-            heading,
-            pitch: 0
-          },
+        pov: {
+          heading,
+          pitch: 0
+        },
 
-          zoom: 1,
+        zoom: 1,
 
-          addressControl: false,
-          fullscreenControl: false,
-          motionTracking: false,
-          motionTrackingControl: false,
-          showRoadLabels: false,
+        addressControl: false,
+        fullscreenControl: false,
+        motionTracking: false,
+        motionTrackingControl: false,
+        showRoadLabels: false,
 
-          linksControl: true,
-          panControl: false,
-          zoomControl: true,
-          enableCloseButton: false,
-          clickToGo: true,
-          visible: true
-        }
-      );
+        linksControl: true,
+        panControl: false,
+        zoomControl: true,
+        enableCloseButton: false,
+        clickToGo: true,
+        visible: true
+      }
+    );
 
-      return;
-    }
+    this.panorama.addListener(
+      "pov_changed",
+      () => {
+        this.updateCompass();
+      }
+    );
 
-    this.panorama.setPosition(position);
+    this.updateCompass();
 
-    this.panorama.setPov({
-      heading,
-      pitch: 0
-    });
-
-    this.panorama.setZoom(1);
-    this.panorama.setVisible(true);
+    return;
   }
 
+  this.panorama.setPosition(position);
+
+  this.panorama.setPov({
+    heading,
+    pitch: 0
+  });
+
+  this.panorama.setZoom(1);
+  this.panorama.setVisible(true);
+
+  this.updateCompass();
+}
+
+  /* COMPASS */
+  updateCompass() {
+  if (!this.panorama) {
+    return;
+  }
+
+  const pov =
+    this.panorama.getPov();
+
+  if (!pov) {
+    return;
+  }
+
+  const compassNeedle =
+    document.getElementById(
+      "compassNeedle"
+    );
+
+  if (!compassNeedle) {
+    return;
+  }
+
+  compassNeedle.style.transform =
+    `rotate(${-pov.heading}deg)`;
+}
 
   /* =====================================================
      GUESSING
