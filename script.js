@@ -208,6 +208,31 @@ class AlbayGeoGuessr {
     this.elements = {};
   }
 
+  /* COMPASS */
+  updateCompass() {
+  if (!this.panorama) {
+    return;
+  }
+
+  const pov =
+    this.panorama.getPov();
+
+  if (!pov) {
+    return;
+  }
+
+  const compassNeedle =
+    document.getElementById(
+      "compassNeedle"
+    );
+
+  if (!compassNeedle) {
+    return;
+  }
+
+  compassNeedle.style.transform =
+    `rotate(${-pov.heading}deg)`;
+}
 
   createInitialState() {
     return {
@@ -706,32 +731,6 @@ class AlbayGeoGuessr {
   this.updateCompass();
 }
 
-  /* COMPASS */
-  updateCompass() {
-  if (!this.panorama) {
-    return;
-  }
-
-  const pov =
-    this.panorama.getPov();
-
-  if (!pov) {
-    return;
-  }
-
-  const compassNeedle =
-    document.getElementById(
-      "compassNeedle"
-    );
-
-  if (!compassNeedle) {
-    return;
-  }
-
-  compassNeedle.style.transform =
-    `rotate(${-pov.heading}deg)`;
-}
-
   /* =====================================================
      GUESSING
   ===================================================== */
@@ -1014,7 +1013,7 @@ class AlbayGeoGuessr {
 let game = null;
 
 window.initGame = function initGame() {
-  game = new AlbayGeoGuessr();
+  game = new GeoGuessr();
   game.init();
 };
 
