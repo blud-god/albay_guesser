@@ -8,17 +8,13 @@ const CONFIG = Object.freeze({
   roundsPerGame: 5,
   maxRoundScore: 5000,
 
-  // Province-scale scoring curve.
   scoreDecayKm: 20,
 
-  // Keep Street View searches close to the generated seed.
   panoramaSearchRadiusM: 800,
   panoramaSnapLimitM: 900,
 
-  // Prevent consecutive rounds from being nearly identical.
   minRoundSeparationM: 6000,
 
-  // Search budget before restarting location generation.
   maxAreaAttempts: 12,
   seedAttemptsPerArea: 5,
 
@@ -30,8 +26,8 @@ const CONFIG = Object.freeze({
   mapZoom: 9,
 
   /*
-    Albay-specific distribution.
-    Most locations intentionally favor poblacion/sentro and built-up roads.
+    Most rounds intentionally favor sentro / poblacion
+    and other built-up roads.
   */
   locationMix: Object.freeze({
     urban: 0.82,
@@ -41,7 +37,6 @@ const CONFIG = Object.freeze({
 
   /*
     Rough mainland-Albay safety bounds.
-    Used only to reject panoramas that snap outside the intended map.
   */
   albayBounds: Object.freeze({
     north: 13.52,
@@ -53,16 +48,7 @@ const CONFIG = Object.freeze({
 
 
 /* =========================================================
-   ALBAY LOCATION POOL
-
-   weight:
-   Higher values make the area more likely to be selected.
-
-   urbanRadiusM:
-   Approximate sentro / built-up search radius.
-
-   maxRadiusM:
-   Maximum range used for occasional outskirts/rural rounds.
+   LOCATION POOL
 ========================================================= */
 
 const DROP_AREAS = Object.freeze([
@@ -208,31 +194,10 @@ class AlbayGeoGuessr {
     this.elements = {};
   }
 
-  /* COMPASS */
-  updateCompass() {
-  if (!this.panorama) {
-    return;
-  }
 
-  const pov =
-    this.panorama.getPov();
-
-  if (!pov) {
-    return;
-  }
-
-  const compassNeedle =
-    document.getElementById(
-      "compassNeedle"
-    );
-
-  if (!compassNeedle) {
-    return;
-  }
-
-  compassNeedle.style.transform =
-    `rotate(${-pov.heading}deg)`;
-}
+  /* =====================================================
+     STATE
+  ===================================================== */
 
   createInitialState() {
     return {
@@ -253,6 +218,10 @@ class AlbayGeoGuessr {
   }
 
 
+  /* =====================================================
+     INITIALIZATION
+  ===================================================== */
+
   init() {
     this.cacheElements();
     this.createMaps();
@@ -262,22 +231,44 @@ class AlbayGeoGuessr {
 
 
   cacheElements() {
-    this.elements.round = document.getElementById("roundDisplay");
-    this.elements.score = document.getElementById("scoreDisplay");
-    this.elements.message = document.getElementById("message");
+    this.elements.round =
+      document.getElementById("roundDisplay");
 
-    this.elements.guessButton = document.getElementById("guessBtn");
-    this.elements.guessPanel = document.getElementById("guessPanel");
+    this.elements.score =
+      document.getElementById("scoreDisplay");
 
-    this.elements.resultOverlay = document.getElementById("resultOverlay");
-    this.elements.resultDistance = document.getElementById("resultDistance");
-    this.elements.resultScore = document.getElementById("resultScore");
-    this.elements.totalScore = document.getElementById("resultTotalScore");
-    this.elements.nextButton = document.getElementById("nextBtn");
+    this.elements.message =
+      document.getElementById("message");
 
-    this.elements.finalOverlay = document.getElementById("finalOverlay");
-    this.elements.finalScore = document.getElementById("finalScore");
-    this.elements.playAgainButton = document.getElementById("playAgainBtn");
+    this.elements.guessButton =
+      document.getElementById("guessBtn");
+
+    this.elements.guessPanel =
+      document.getElementById("guessPanel");
+
+    this.elements.resultOverlay =
+      document.getElementById("resultOverlay");
+
+    this.elements.resultDistance =
+      document.getElementById("resultDistance");
+
+    this.elements.resultScore =
+      document.getElementById("resultScore");
+
+    this.elements.totalScore =
+      document.getElementById("resultTotalScore");
+
+    this.elements.nextButton =
+      document.getElementById("nextBtn");
+
+    this.elements.finalOverlay =
+      document.getElementById("finalOverlay");
+
+    this.elements.finalScore =
+      document.getElementById("finalScore");
+
+    this.elements.playAgainButton =
+      document.getElementById("playAgainBtn");
   }
 
 
@@ -286,9 +277,11 @@ class AlbayGeoGuessr {
       center: CONFIG.mapCenter,
       zoom: CONFIG.mapZoom,
       mapTypeId: "roadmap",
+
       streetViewControl: false,
       fullscreenControl: false,
       mapTypeControl: false,
+
       gestureHandling: "greedy",
       clickableIcons: false
     };
@@ -303,40 +296,91 @@ class AlbayGeoGuessr {
       {
         ...mapOptions,
 
-        // Fully interactive after guessing.
         gestureHandling: "greedy",
         scrollwheel: true,
         zoomControl: true,
         keyboardShortcuts: true,
 
-        // Keep unnecessary controls hidden.
         streetViewControl: false,
         fullscreenControl: false,
         mapTypeControl: false
       }
     );
 
-
-    this.streetViewService = new google.maps.StreetViewService();
+    this.streetViewService =
+      new google.maps.StreetViewService();
   }
 
 
   bindEvents() {
-    this.map.addListener("click", (event) => {
-      this.placeGuess(event.latLng);
-    });
+    this.map.addListener(
+      "click",
+      (event) => {
+        this.placeGuess(event.latLng);
+      }
+    );
 
-    this.elements.guessButton.addEventListener("click", () => {
-      this.submitGuess();
-    });
+    this.elements.guessButton.addEventListener(
+      "click",
+      () => {
+        this.submitGuess();
+      }
+    );
 
-    this.elements.nextButton.addEventListener("click", () => {
-      this.advanceRound();
-    });
+    this.elements.nextButton.addEventListener(
+      "click",
+      () => {
+        this.advanceRound();
+      }
+    );
 
-    this.elements.playAgainButton.addEventListener("click", () => {
-      this.restartGame();
-    });
+    this.elements.playAgainButton.addEventListener(
+      "click",
+      () => {
+        this.restartGame();
+      }
+    );
+  }
+
+
+  /* =====================================================
+     COMPASS
+  ===================================================== */
+
+  updateCompass() {
+    if (!this.panorama) {
+      return;
+    }
+
+    const pov =
+      this.panorama.getPov();
+
+    const compassDial =
+      document.getElementById(
+        "compassNeedle"
+      );
+
+    if (
+      !pov ||
+      !compassDial ||
+      !Number.isFinite(pov.heading)
+    ) {
+      return;
+    }
+
+    /*
+      Street View heading:
+      0   = North
+      90  = East
+      180 = South
+      270 = West
+
+      Rotate the compass dial in the opposite
+      direction of the camera.
+    */
+
+    compassDial.style.transform =
+      `rotate(${-pov.heading}deg)`;
   }
 
 
@@ -348,15 +392,24 @@ class AlbayGeoGuessr {
     this.resetRoundState();
     this.updateHud();
 
-    this.setMessage("Finding a Street View location…");
+    this.setMessage(
+      "Finding a Street View location…"
+    );
 
     try {
-      const roundLocation = await this.findRoundLocation();
+      const roundLocation =
+        await this.findRoundLocation();
 
-      this.acceptRoundLocation(roundLocation);
-      this.loadPanorama(roundLocation.location);
+      this.acceptRoundLocation(
+        roundLocation
+      );
 
-      this.state.roundReady = true;
+      this.loadPanorama(
+        roundLocation.location
+      );
+
+      this.state.roundReady =
+        true;
 
       this.setMessage(
         "Look around, then place your guess on the map."
@@ -368,50 +421,80 @@ class AlbayGeoGuessr {
         "Could not find a suitable Street View location. Retrying…"
       );
 
-      window.setTimeout(() => {
-        this.startRound();
-      }, 900);
+      window.setTimeout(
+        () => {
+          this.startRound();
+        },
+        900
+      );
     }
   }
 
 
   resetRoundState() {
-    this.state.currentLocation = null;
-    this.state.currentPanoId = null;
-    this.state.currentAreaName = null;
-    this.state.roundReady = false;
-    this.state.guessSubmitted = false;
+    this.state.currentLocation =
+      null;
+
+    this.state.currentPanoId =
+      null;
+
+    this.state.currentAreaName =
+      null;
+
+    this.state.roundReady =
+      false;
+
+    this.state.guessSubmitted =
+      false;
 
     this.clearGuessMarker();
     this.clearResultMap();
 
-    this.map.setCenter(CONFIG.mapCenter);
-    this.map.setZoom(CONFIG.mapZoom);
+    this.map.setCenter(
+      CONFIG.mapCenter
+    );
 
-    this.elements.guessButton.disabled = true;
+    this.map.setZoom(
+      CONFIG.mapZoom
+    );
 
-    this.elements.guessPanel.classList.remove("is-hidden");
-    this.elements.resultOverlay.classList.add("is-hidden");
-    this.elements.finalOverlay.classList.add("is-hidden");
+    this.elements.guessButton.disabled =
+      true;
+
+    this.elements.guessPanel
+      .classList.remove(
+        "is-hidden"
+      );
+
+    this.elements.resultOverlay
+      .classList.add(
+        "is-hidden"
+      );
+
+    this.elements.finalOverlay
+      .classList.add(
+        "is-hidden"
+      );
   }
 
 
   /* =====================================================
      LOCATION GENERATION
-
-     Weighted area -> zone -> random seed -> nearest valid
-     official outdoor Street View -> quality checks.
   ===================================================== */
 
   async findRoundLocation() {
-    const temporarilyRejectedAreas = new Set();
+    const temporarilyRejectedAreas =
+      new Set();
 
     for (
       let areaAttempt = 0;
       areaAttempt < CONFIG.maxAreaAttempts;
       areaAttempt += 1
     ) {
-      const area = this.chooseWeightedArea(temporarilyRejectedAreas);
+      const area =
+        this.chooseWeightedArea(
+          temporarilyRejectedAreas
+        );
 
       if (!area) {
         break;
@@ -422,8 +505,13 @@ class AlbayGeoGuessr {
         seedAttempt < CONFIG.seedAttemptsPerArea;
         seedAttempt += 1
       ) {
-        const seed = this.generateSeed(area);
-        const panoramaData = await this.lookupPanorama(seed.point);
+        const seed =
+          this.generateSeed(area);
+
+        const panoramaData =
+          await this.lookupPanorama(
+            seed.point
+          );
 
         if (
           !panoramaData ||
@@ -433,22 +521,44 @@ class AlbayGeoGuessr {
           continue;
         }
 
-        const location = panoramaData.location.latLng;
-        const panoId = panoramaData.location.pano || null;
+        const location =
+          panoramaData.location.latLng;
 
-        if (!this.isInsideAlbay(location)) {
+        const panoId =
+          panoramaData.location.pano ||
+          null;
+
+        if (
+          !this.isInsideAlbay(
+            location
+          )
+        ) {
           continue;
         }
 
-        if (!this.isCloseEnoughToSeed(seed.point, location)) {
+        if (
+          !this.isCloseEnoughToSeed(
+            seed.point,
+            location
+          )
+        ) {
           continue;
         }
 
-        if (panoId && this.state.usedPanoIds.has(panoId)) {
+        if (
+          panoId &&
+          this.state.usedPanoIds.has(
+            panoId
+          )
+        ) {
           continue;
         }
 
-        if (this.isTooCloseToPreviousRound(location)) {
+        if (
+          this.isTooCloseToPreviousRound(
+            location
+          )
+        ) {
           continue;
         }
 
@@ -460,7 +570,9 @@ class AlbayGeoGuessr {
         };
       }
 
-      temporarilyRejectedAreas.add(area.name);
+      temporarilyRejectedAreas.add(
+        area.name
+      );
     }
 
     throw new Error(
@@ -469,93 +581,167 @@ class AlbayGeoGuessr {
   }
 
 
-  chooseWeightedArea(extraExcludedNames = new Set()) {
-    let candidates = DROP_AREAS.filter(
-      (area) =>
-        !this.state.usedAreaNames.has(area.name) &&
-        !extraExcludedNames.has(area.name)
-    );
-
-    if (candidates.length === 0) {
-      candidates = DROP_AREAS.filter(
-        (area) => !extraExcludedNames.has(area.name)
+  chooseWeightedArea(
+    extraExcludedNames =
+      new Set()
+  ) {
+    let candidates =
+      DROP_AREAS.filter(
+        (area) =>
+          !this.state.usedAreaNames.has(
+            area.name
+          ) &&
+          !extraExcludedNames.has(
+            area.name
+          )
       );
+
+    if (
+      candidates.length === 0
+    ) {
+      candidates =
+        DROP_AREAS.filter(
+          (area) =>
+            !extraExcludedNames.has(
+              area.name
+            )
+        );
     }
 
-    if (candidates.length === 0) {
+    if (
+      candidates.length === 0
+    ) {
       return null;
     }
 
-    const totalWeight = candidates.reduce(
-      (sum, area) => sum + area.weight,
-      0
-    );
+    const totalWeight =
+      candidates.reduce(
+        (sum, area) =>
+          sum + area.weight,
+        0
+      );
 
-    let cursor = Math.random() * totalWeight;
+    let cursor =
+      Math.random() *
+      totalWeight;
 
-    for (const area of candidates) {
-      cursor -= area.weight;
+    for (
+      const area of candidates
+    ) {
+      cursor -=
+        area.weight;
 
-      if (cursor <= 0) {
+      if (
+        cursor <= 0
+      ) {
         return area;
       }
     }
 
-    return candidates[candidates.length - 1];
+    return candidates[
+      candidates.length - 1
+    ];
   }
 
 
   generateSeed(area) {
-    const roll = Math.random();
+    const roll =
+      Math.random();
 
     const {
       urban,
       outskirts
-    } = CONFIG.locationMix;
+    } =
+      CONFIG.locationMix;
 
     let zone;
     let minDistanceM;
     let maxDistanceM;
 
-    if (roll < urban) {
-      zone = "urban";
-      minDistanceM = 0;
-      maxDistanceM = area.urbanRadiusM;
-    } else if (roll < urban + outskirts) {
-      zone = "outskirts";
-      minDistanceM = area.urbanRadiusM * 0.75;
-      maxDistanceM = area.maxRadiusM * 0.68;
+    if (
+      roll < urban
+    ) {
+      zone =
+        "urban";
+
+      minDistanceM =
+        0;
+
+      maxDistanceM =
+        area.urbanRadiusM;
+    } else if (
+      roll <
+      urban +
+      outskirts
+    ) {
+      zone =
+        "outskirts";
+
+      minDistanceM =
+        area.urbanRadiusM *
+        0.75;
+
+      maxDistanceM =
+        area.maxRadiusM *
+        0.68;
     } else {
-      zone = "rural";
-      minDistanceM = area.maxRadiusM * 0.58;
-      maxDistanceM = area.maxRadiusM;
+      zone =
+        "rural";
+
+      minDistanceM =
+        area.maxRadiusM *
+        0.58;
+
+      maxDistanceM =
+        area.maxRadiusM;
     }
 
     return {
       zone,
-      point: this.randomPointInRing(
-        area.center,
-        minDistanceM,
-        maxDistanceM
-      )
+
+      point:
+        this.randomPointInRing(
+          area.center,
+          minDistanceM,
+          maxDistanceM
+        )
     };
   }
 
 
-  randomPointInRing(center, minDistanceM, maxDistanceM) {
-    const minSq = minDistanceM ** 2;
-    const maxSq = maxDistanceM ** 2;
+  randomPointInRing(
+    center,
+    minDistanceM,
+    maxDistanceM
+  ) {
+    const minSq =
+      minDistanceM ** 2;
 
-    const distanceM = Math.sqrt(
-      minSq +
+    const maxSq =
+      maxDistanceM ** 2;
+
+    const distanceM =
+      Math.sqrt(
+        minSq +
+        Math.random() *
+        (
+          maxSq -
+          minSq
+        )
+      );
+
+    const bearing =
       Math.random() *
-      (maxSq - minSq)
-    );
-
-    const bearing = Math.random() * Math.PI * 2;
+      Math.PI *
+      2;
 
     const latitudeOffset =
-      (distanceM * Math.cos(bearing)) /
+      (
+        distanceM *
+        Math.cos(
+          bearing
+        )
+      ) /
       111320;
 
     const longitudeScale =
@@ -567,71 +753,116 @@ class AlbayGeoGuessr {
       );
 
     const longitudeOffset =
-      (distanceM * Math.sin(bearing)) /
+      (
+        distanceM *
+        Math.sin(
+          bearing
+        )
+      ) /
       longitudeScale;
 
     return {
-      lat: center.lat + latitudeOffset,
-      lng: center.lng + longitudeOffset
+      lat:
+        center.lat +
+        latitudeOffset,
+
+      lng:
+        center.lng +
+        longitudeOffset
     };
   }
 
 
   lookupPanorama(point) {
-    return new Promise((resolve) => {
-      this.streetViewService.getPanorama(
-        {
-          location: point,
-          radius: CONFIG.panoramaSearchRadiusM,
+    return new Promise(
+      (resolve) => {
+        this.streetViewService
+          .getPanorama(
+            {
+              location:
+                point,
 
-          preference:
-            google.maps.StreetViewPreference.NEAREST,
+              radius:
+                CONFIG
+                  .panoramaSearchRadiusM,
 
-          /*
-            Request official Google, outdoor Street View.
-            This avoids random user PhotoSpheres and indoor imagery.
-          */
-          sources: [
-            google.maps.StreetViewSource.GOOGLE,
-            google.maps.StreetViewSource.OUTDOOR
-          ]
-        },
+              preference:
+                google.maps
+                  .StreetViewPreference
+                  .NEAREST,
 
-        (data, status) => {
-          if (
-            status ===
-            google.maps.StreetViewStatus.OK
-          ) {
-            resolve(data);
-          } else {
-            resolve(null);
-          }
-        }
-      );
-    });
+              sources: [
+                google.maps
+                  .StreetViewSource
+                  .GOOGLE,
+
+                google.maps
+                  .StreetViewSource
+                  .OUTDOOR
+              ]
+            },
+
+            (
+              data,
+              status
+            ) => {
+              if (
+                status ===
+                google.maps
+                  .StreetViewStatus
+                  .OK
+              ) {
+                resolve(
+                  data
+                );
+              } else {
+                resolve(
+                  null
+                );
+              }
+            }
+          );
+      }
+    );
   }
 
 
-  isCloseEnoughToSeed(seed, panoramaLocation) {
-    const seedLatLng = new google.maps.LatLng(
-      seed.lat,
-      seed.lng
-    );
+  isCloseEnoughToSeed(
+    seed,
+    panoramaLocation
+  ) {
+    const seedLatLng =
+      new google.maps.LatLng(
+        seed.lat,
+        seed.lng
+      );
 
     const distance =
-      google.maps.geometry.spherical.computeDistanceBetween(
-        seedLatLng,
-        panoramaLocation
-      );
+      google.maps.geometry
+        .spherical
+        .computeDistanceBetween(
+          seedLatLng,
+          panoramaLocation
+        );
 
-    return distance <= CONFIG.panoramaSnapLimitM;
+    return (
+      distance <=
+      CONFIG.panoramaSnapLimitM
+    );
   }
 
 
-  isInsideAlbay(location) {
-    const lat = location.lat();
-    const lng = location.lng();
-    const bounds = CONFIG.albayBounds;
+  isInsideAlbay(
+    location
+  ) {
+    const lat =
+      location.lat();
+
+    const lng =
+      location.lng();
+
+    const bounds =
+      CONFIG.albayBounds;
 
     return (
       lat >= bounds.south &&
@@ -642,31 +873,59 @@ class AlbayGeoGuessr {
   }
 
 
-  isTooCloseToPreviousRound(location) {
-    return this.state.usedLocations.some(
-      (previousLocation) => {
-        const distance =
-          google.maps.geometry.spherical.computeDistanceBetween(
-            location,
-            previousLocation
-          );
+  isTooCloseToPreviousRound(
+    location
+  ) {
+    return this.state
+      .usedLocations
+      .some(
+        (
+          previousLocation
+        ) => {
+          const distance =
+            google.maps
+              .geometry
+              .spherical
+              .computeDistanceBetween(
+                location,
+                previousLocation
+              );
 
-        return distance < CONFIG.minRoundSeparationM;
-      }
-    );
+          return (
+            distance <
+            CONFIG.minRoundSeparationM
+          );
+        }
+      );
   }
 
 
-  acceptRoundLocation(roundLocation) {
-    this.state.currentLocation = roundLocation.location;
-    this.state.currentPanoId = roundLocation.panoId;
-    this.state.currentAreaName = roundLocation.areaName;
+  acceptRoundLocation(
+    roundLocation
+  ) {
+    this.state.currentLocation =
+      roundLocation.location;
 
-    this.state.usedAreaNames.add(roundLocation.areaName);
-    this.state.usedLocations.push(roundLocation.location);
+    this.state.currentPanoId =
+      roundLocation.panoId;
 
-    if (roundLocation.panoId) {
-      this.state.usedPanoIds.add(roundLocation.panoId);
+    this.state.currentAreaName =
+      roundLocation.areaName;
+
+    this.state.usedAreaNames.add(
+      roundLocation.areaName
+    );
+
+    this.state.usedLocations.push(
+      roundLocation.location
+    );
+
+    if (
+      roundLocation.panoId
+    ) {
+      this.state.usedPanoIds.add(
+        roundLocation.panoId
+      );
     }
   }
 
@@ -676,60 +935,97 @@ class AlbayGeoGuessr {
   ===================================================== */
 
   loadPanorama(position) {
-  const heading = Math.random() * 360;
+    const heading =
+      Math.random() *
+      360;
 
-  if (!this.panorama) {
-    this.panorama = new google.maps.StreetViewPanorama(
-      document.getElementById("street-view"),
-      {
-        position,
+    if (
+      !this.panorama
+    ) {
+      this.panorama =
+        new google.maps
+          .StreetViewPanorama(
+            document.getElementById(
+              "street-view"
+            ),
 
-        pov: {
-          heading,
-          pitch: 0
-        },
+            {
+              position,
 
-        zoom: 1,
+              pov: {
+                heading,
+                pitch: 0
+              },
 
-        addressControl: false,
-        fullscreenControl: false,
-        motionTracking: false,
-        motionTrackingControl: false,
-        showRoadLabels: false,
+              zoom: 1,
 
-        linksControl: true,
-        panControl: false,
-        zoomControl: true,
-        enableCloseButton: false,
-        clickToGo: true,
-        visible: true
-      }
+              addressControl:
+                false,
+
+              fullscreenControl:
+                false,
+
+              motionTracking:
+                false,
+
+              motionTrackingControl:
+                false,
+
+              showRoadLabels:
+                false,
+
+              linksControl:
+                true,
+
+              panControl:
+                false,
+
+              zoomControl:
+                true,
+
+              enableCloseButton:
+                false,
+
+              clickToGo:
+                true,
+
+              visible:
+                true
+            }
+          );
+
+      this.panorama.addListener(
+        "pov_changed",
+        () => {
+          this.updateCompass();
+        }
+      );
+
+      this.updateCompass();
+
+      return;
+    }
+
+    this.panorama.setPosition(
+      position
     );
 
-    this.panorama.addListener(
-      "pov_changed",
-      () => {
-        this.updateCompass();
-      }
+    this.panorama.setPov({
+      heading,
+      pitch: 0
+    });
+
+    this.panorama.setZoom(
+      1
+    );
+
+    this.panorama.setVisible(
+      true
     );
 
     this.updateCompass();
-
-    return;
   }
 
-  this.panorama.setPosition(position);
-
-  this.panorama.setPov({
-    heading,
-    pitch: 0
-  });
-
-  this.panorama.setZoom(1);
-  this.panorama.setVisible(true);
-
-  this.updateCompass();
-}
 
   /* =====================================================
      GUESSING
@@ -743,18 +1039,33 @@ class AlbayGeoGuessr {
       return;
     }
 
-    if (!this.guessMarker) {
-      this.guessMarker = new google.maps.Marker({
-        map: this.map,
-        position,
-        title: "Your guess",
-        label: "G"
-      });
+    if (
+      !this.guessMarker
+    ) {
+      this.guessMarker =
+        new google.maps.Marker({
+          map:
+            this.map,
+
+          position,
+
+          title:
+            "Your guess",
+
+          label:
+            "G"
+        });
     } else {
-      this.guessMarker.setPosition(position);
+      this.guessMarker
+        .setPosition(
+          position
+        );
     }
 
-    this.elements.guessButton.disabled = false;
+    this.elements
+      .guessButton
+      .disabled =
+        false;
   }
 
 
@@ -768,22 +1079,38 @@ class AlbayGeoGuessr {
       return;
     }
 
-    // Lock scoring immediately so a double-click cannot award points twice.
-    this.state.guessSubmitted = true;
-    this.elements.guessButton.disabled = true;
+    this.state.guessSubmitted =
+      true;
 
-    const guessPosition = this.guessMarker.getPosition();
+    this.elements
+      .guessButton
+      .disabled =
+        true;
+
+    const guessPosition =
+      this.guessMarker
+        .getPosition();
 
     const distanceM =
-      google.maps.geometry.spherical.computeDistanceBetween(
-        guessPosition,
-        this.state.currentLocation
+      google.maps.geometry
+        .spherical
+        .computeDistanceBetween(
+          guessPosition,
+          this.state
+            .currentLocation
+        );
+
+    const distanceKm =
+      distanceM /
+      1000;
+
+    const roundScore =
+      this.calculateScore(
+        distanceKm
       );
 
-    const distanceKm = distanceM / 1000;
-    const roundScore = this.calculateScore(distanceKm);
-
-    this.state.totalScore += roundScore;
+    this.state.totalScore +=
+      roundScore;
 
     this.showRoundResult(
       guessPosition,
@@ -795,7 +1122,9 @@ class AlbayGeoGuessr {
   }
 
 
-  calculateScore(distanceKm) {
+  calculateScore(
+    distanceKm
+  ) {
     const score =
       CONFIG.maxRoundScore *
       Math.exp(
@@ -807,7 +1136,9 @@ class AlbayGeoGuessr {
       0,
       Math.min(
         CONFIG.maxRoundScore,
-        Math.round(score)
+        Math.round(
+          score
+        )
       )
     );
   }
@@ -815,10 +1146,6 @@ class AlbayGeoGuessr {
 
   /* =====================================================
      ROUND RESULT
-
-     The result card floats above Street View.
-     Everything outside the card remains interactive, so
-     the player can continue roaming after submitting.
   ===================================================== */
 
   showRoundResult(
@@ -826,47 +1153,70 @@ class AlbayGeoGuessr {
     distanceKm,
     roundScore
   ) {
-    this.elements.guessPanel.classList.add("is-hidden");
+    this.elements
+      .guessPanel
+      .classList.add(
+        "is-hidden"
+      );
 
-    this.elements.resultOverlay.classList.remove("is-hidden");
-
-    // Explicitly keep the panorama visible and interactive after guessing.
-    if (this.panorama) {
-      this.panorama.setVisible(true);
-    }
-
-    this.elements.resultDistance.textContent =
-      `${distanceKm.toFixed(2)} km`;
-
-    this.elements.resultScore.textContent =
-      `${roundScore.toLocaleString()} pts`;
-
-    this.elements.totalScore.textContent =
-      `${this.state.totalScore.toLocaleString()} / ${(
-        CONFIG.maxRoundScore *
-        CONFIG.roundsPerGame
-      ).toLocaleString()}`;
-
-    this.elements.nextButton.textContent =
-      this.state.round === CONFIG.roundsPerGame
-        ? "View Final Score"
-        : "Next Round";
+    this.elements
+      .resultOverlay
+      .classList.remove(
+        "is-hidden"
+      );
 
     /*
-      The result map starts hidden.
-      Trigger a resize before fitting the two markers.
+      Keep Street View active after guessing.
     */
-    window.setTimeout(() => {
-      google.maps.event.trigger(
-        this.resultMap,
-        "resize"
-      );
 
-      this.drawResultMap(
-        guessPosition,
-        this.state.currentLocation
+    if (
+      this.panorama
+    ) {
+      this.panorama.setVisible(
+        true
       );
-    }, 0);
+    }
+
+    this.elements
+      .resultDistance
+      .textContent =
+        `${distanceKm.toFixed(2)} km`;
+
+    this.elements
+      .resultScore
+      .textContent =
+        `${roundScore.toLocaleString()} pts`;
+
+    this.elements
+      .totalScore
+      .textContent =
+        `${this.state.totalScore.toLocaleString()} / ${(
+          CONFIG.maxRoundScore *
+          CONFIG.roundsPerGame
+        ).toLocaleString()}`;
+
+    this.elements
+      .nextButton
+      .textContent =
+        this.state.round ===
+        CONFIG.roundsPerGame
+          ? "View Final Score"
+          : "Next Round";
+
+    window.setTimeout(
+      () => {
+        google.maps.event.trigger(
+          this.resultMap,
+          "resize"
+        );
+
+        this.drawResultMap(
+          guessPosition,
+          this.state.currentLocation
+        );
+      },
+      0
+    );
 
     this.setMessage(
       "Answer revealed — you can keep exploring Street View before continuing."
@@ -880,38 +1230,67 @@ class AlbayGeoGuessr {
   ) {
     this.clearResultMap();
 
-    this.resultGuessMarker = new google.maps.Marker({
-      map: this.resultMap,
-      position: guessPosition,
-      label: "G",
-      title: "Your guess"
-    });
+    this.resultGuessMarker =
+      new google.maps.Marker({
+        map:
+          this.resultMap,
 
-    this.resultActualMarker = new google.maps.Marker({
-      map: this.resultMap,
-      position: actualPosition,
-      label: "A",
-      title: "Actual location"
-    });
+        position:
+          guessPosition,
 
-    this.resultLine = new google.maps.Polyline({
-      map: this.resultMap,
+        label:
+          "G",
 
-      path: [
-        guessPosition,
-        actualPosition
-      ],
+        title:
+          "Your guess"
+      });
 
-      geodesic: true,
-      strokeOpacity: 0.85,
-      strokeWeight: 4
-    });
+    this.resultActualMarker =
+      new google.maps.Marker({
+        map:
+          this.resultMap,
+
+        position:
+          actualPosition,
+
+        label:
+          "A",
+
+        title:
+          "Actual location"
+      });
+
+    this.resultLine =
+      new google.maps.Polyline({
+        map:
+          this.resultMap,
+
+        path: [
+          guessPosition,
+          actualPosition
+        ],
+
+        geodesic:
+          true,
+
+        strokeOpacity:
+          0.85,
+
+        strokeWeight:
+          4
+      });
 
     const bounds =
-      new google.maps.LatLngBounds();
+      new google.maps
+        .LatLngBounds();
 
-    bounds.extend(guessPosition);
-    bounds.extend(actualPosition);
+    bounds.extend(
+      guessPosition
+    );
+
+    bounds.extend(
+      actualPosition
+    );
 
     this.resultMap.fitBounds(
       bounds,
@@ -921,30 +1300,58 @@ class AlbayGeoGuessr {
 
 
   clearResultMap() {
-    if (this.resultGuessMarker) {
-      this.resultGuessMarker.setMap(null);
-      this.resultGuessMarker = null;
+    if (
+      this.resultGuessMarker
+    ) {
+      this.resultGuessMarker
+        .setMap(
+          null
+        );
+
+      this.resultGuessMarker =
+        null;
     }
 
-    if (this.resultActualMarker) {
-      this.resultActualMarker.setMap(null);
-      this.resultActualMarker = null;
+    if (
+      this.resultActualMarker
+    ) {
+      this.resultActualMarker
+        .setMap(
+          null
+        );
+
+      this.resultActualMarker =
+        null;
     }
 
-    if (this.resultLine) {
-      this.resultLine.setMap(null);
-      this.resultLine = null;
+    if (
+      this.resultLine
+    ) {
+      this.resultLine
+        .setMap(
+          null
+        );
+
+      this.resultLine =
+        null;
     }
   }
 
 
   clearGuessMarker() {
-    if (!this.guessMarker) {
+    if (
+      !this.guessMarker
+    ) {
       return;
     }
 
-    this.guessMarker.setMap(null);
-    this.guessMarker = null;
+    this.guessMarker
+      .setMap(
+        null
+      );
+
+    this.guessMarker =
+      null;
   }
 
 
@@ -953,7 +1360,9 @@ class AlbayGeoGuessr {
   ===================================================== */
 
   advanceRound() {
-    if (!this.state.guessSubmitted) {
+    if (
+      !this.state.guessSubmitted
+    ) {
       return;
     }
 
@@ -962,10 +1371,13 @@ class AlbayGeoGuessr {
       CONFIG.roundsPerGame
     ) {
       this.showFinalScore();
+
       return;
     }
 
-    this.state.round += 1;
+    this.state.round +=
+      1;
+
     this.startRound();
   }
 
@@ -975,33 +1387,59 @@ class AlbayGeoGuessr {
       CONFIG.maxRoundScore *
       CONFIG.roundsPerGame;
 
-    this.elements.resultOverlay.classList.add("is-hidden");
-    this.elements.finalOverlay.classList.remove("is-hidden");
+    this.elements
+      .resultOverlay
+      .classList.add(
+        "is-hidden"
+      );
 
-    this.elements.finalScore.textContent =
-      `${this.state.totalScore.toLocaleString()} / ${maximum.toLocaleString()}`;
+    this.elements
+      .finalOverlay
+      .classList.remove(
+        "is-hidden"
+      );
 
-    this.setMessage("Game complete.");
+    this.elements
+      .finalScore
+      .textContent =
+        `${this.state.totalScore.toLocaleString()} / ${maximum.toLocaleString()}`;
+
+    this.setMessage(
+      "Game complete."
+    );
   }
 
 
   restartGame() {
-    this.state = this.createInitialState();
+    this.state =
+      this.createInitialState();
+
     this.startRound();
   }
 
 
-  updateHud() {
-    this.elements.round.textContent =
-      `Round ${this.state.round} / ${CONFIG.roundsPerGame}`;
+  /* =====================================================
+     HUD
+  ===================================================== */
 
-    this.elements.score.textContent =
-      `${this.state.totalScore.toLocaleString()} pts`;
+  updateHud() {
+    this.elements
+      .round
+      .textContent =
+        `Round ${this.state.round} / ${CONFIG.roundsPerGame}`;
+
+    this.elements
+      .score
+      .textContent =
+        `${this.state.totalScore.toLocaleString()} pts`;
   }
 
 
   setMessage(message) {
-    this.elements.message.textContent = message;
+    this.elements
+      .message
+      .textContent =
+        message;
   }
 }
 
@@ -1012,17 +1450,26 @@ class AlbayGeoGuessr {
 
 let game = null;
 
-window.initGame = function initGame() {
-  game = new GeoGuessr();
-  game.init();
-};
+window.initGame =
+  function initGame() {
+    game =
+      new AlbayGeoGuessr();
 
-window.gm_authFailure = function gmAuthFailure() {
-  const message =
-    document.getElementById("message");
+    game.init();
+  };
 
-  if (message) {
-    message.textContent =
-      "Google Maps authentication failed. Check the API key, restrictions, enabled APIs, and billing.";
-  }
-};
+
+window.gm_authFailure =
+  function gmAuthFailure() {
+    const message =
+      document.getElementById(
+        "message"
+      );
+
+    if (
+      message
+    ) {
+      message.textContent =
+        "Google Maps authentication failed. Check the API key, restrictions, enabled APIs, and billing.";
+    }
+  };

@@ -2,10 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1.0"
   />
+
   <meta
     name="theme-color"
     content="#0b1220"
@@ -29,20 +31,33 @@
   ></script>
 </head>
 
-x`<body>
+<body>
   <main class="game-shell">
 
-    <div 
+    <div
       id="compass"
       class="compass"
       aria-label="Compass"
     >
       <div
         id="compassNeedle"
-        class="compass-needle"
+        class="compass-dial"
       >
-        N
+        <span class="compass-label compass-north">N</span>
+        <span class="compass-label compass-east">E</span>
+        <span class="compass-label compass-south">S</span>
+        <span class="compass-label compass-west">W</span>
+
+        <span
+          class="compass-pointer"
+          aria-hidden="true"
+        ></span>
       </div>
+
+      <span
+        class="compass-center"
+        aria-hidden="true"
+      ></span>
     </div>
 
     <div
@@ -52,15 +67,23 @@ x`<body>
     ></div>
 
     <header class="top-bar">
-      <div class="brand">GeoGuessr</div>
+      <div class="brand">
+        GeoGuessr
+      </div>
 
       <div
         class="hud"
         aria-label="Game status"
       >
-        <span id="roundDisplay">Round 1 / 5</span>
+        <span id="roundDisplay">
+          Round 1 / 5
+        </span>
+
         <span class="hud-divider"></span>
-        <span id="scoreDisplay">0 pts</span>
+
+        <span id="scoreDisplay">
+          0 pts
+        </span>
       </div>
     </header>
 
@@ -98,25 +121,42 @@ x`<body>
       aria-live="polite"
     >
       <div class="result-card">
+
         <div
           id="resultMap"
           class="result-map"
         ></div>
 
         <div class="result-summary">
+
           <div class="result-stat">
-            <span class="result-label">Distance</span>
-            <strong id="resultDistance">0.00 km</strong>
+            <span class="result-label">
+              Distance
+            </span>
+
+            <strong id="resultDistance">
+              0.00 km
+            </strong>
           </div>
 
           <div class="result-stat">
-            <span class="result-label">Round score</span>
-            <strong id="resultScore">0 pts</strong>
+            <span class="result-label">
+              Round score
+            </span>
+
+            <strong id="resultScore">
+              0 pts
+            </strong>
           </div>
 
           <div class="result-stat">
-            <span class="result-label">Total</span>
-            <strong id="resultTotalScore">0 / 25,000</strong>
+            <span class="result-label">
+              Total
+            </span>
+
+            <strong id="resultTotalScore">
+              0 / 25,000
+            </strong>
           </div>
 
           <button
@@ -126,6 +166,7 @@ x`<body>
           >
             Next Round
           </button>
+
         </div>
       </div>
     </section>
@@ -136,9 +177,14 @@ x`<body>
       aria-live="polite"
     >
       <div class="final-card">
-        <p class="final-kicker">5 rounds complete</p>
 
-        <h1>Final Score</h1>
+        <p class="final-kicker">
+          5 rounds complete
+        </p>
+
+        <h1>
+          Final Score
+        </h1>
 
         <p
           id="finalScore"
@@ -154,6 +200,7 @@ x`<body>
         >
           Play Again
         </button>
+
       </div>
     </section>
 
