@@ -1,5 +1,3 @@
-AlbayGuessr
-
 A GeoGuessr-style game set in Albay.
 
 AI
